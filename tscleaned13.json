@@ -1,0 +1,49 @@
+[
+    {
+        "Size": 3951,
+        "SpecificPacketSize": 3907,
+        "Id": "3ebb31bf-6fff-4ca2-8e89-4b92e730c2f7",
+        "From": "852d1c60-7b3e-4320-b420-1e7e25a11635",
+        "Type": 13,
+        "SpecificPacket": {
+            "User": {
+                "UserId": "76561199108042297",
+                "Team": {
+                    "Id": "00000000-0000-0000-0000-000000000000",
+                    "Name": "None"
+                },
+                "PlayState": 0,
+                "DownloadState": 2,
+                "Score": 461244,
+                "Combo": 43,
+                "Accuracy": 0.51503706,
+                "SongPosition": 257.20477,
+                "SongList": null,
+                "ModList": [
+                    ""
+                ],
+                "StreamScreenCoordinates": {
+                    "x": 0,
+                    "y": 0
+                },
+                "StreamDelayMs": 0,
+                "StreamSyncStartMs": 0,
+                "Id": "852d1c60-7b3e-4320-b420-1e7e25a11635",
+                "Name": "ACC|CUTE|Raine"
+            },
+            "Beatmap": {
+                "Name": null,
+                "LevelId": "custom_level_CB9F1581FF6C09130C991DB8823C5953C660688F",
+                "Characteristic": {
+                    "SerializedName": "Standard",
+                    "Difficulties": [
+                        4
+                    ]
+                },
+                "Difficulty": 4
+            },
+            "Type": 1,
+            "Score": 461244
+        }
+    }
+]
