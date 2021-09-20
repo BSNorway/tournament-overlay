@@ -1,13 +1,16 @@
 import EventEmitter from "events";
 import WebSocket from "isomorphic-ws";
 
-import { EventType, ForwardingPacket, Packet, PacketTypes, ScoreUpdateEventPacket } from "./packet";
+import { EventType, ForwardingPacket, Packet, PacketTypes, EventPacket, CordinatorPacket } from "./packet";
 
 export class TASocket extends EventEmitter {
     socket: WebSocket;
+    coordinators: Map<string, string>;
+    mainCoordinator?: string;
 
     constructor() {
         super();
+        this.coordinators = new Map();
         this.socket = new WebSocket("ws://ta.wildwolf.dev:10157");
         this.socket.on('open', this.socketOpened);
         this.socket.on('close', this.socketClosed);
@@ -15,6 +18,11 @@ export class TASocket extends EventEmitter {
         setTimeout(() => {
             console.log(this.socket.readyState);
         }, 1000);
+    }
+
+    setMainCoordinator(key: string) {
+        this.mainCoordinator = key;
+        this.emit("coordinatorChanged", this.mainCoordinator);
     }
 
     socketOpened(event: WebSocket.OpenEvent) {
@@ -31,13 +39,33 @@ export class TASocket extends EventEmitter {
 
     socketMessage(data: WebSocket.Data) {
         var packet = JSON.parse(data as string) as Packet;
+        console.log(packet);
         switch (packet.Type) {
+            case PacketTypes.Event:
+                var eventPacket = packet.SpecificPacket as EventPacket;
+                switch (eventPacket.Type) {
+                    case EventType.CoordinatorAdded:
+                        var cordinator = eventPacket.ChangedObject as CordinatorPacket;
+                        this.coordinators.set(cordinator.Id, cordinator.Name)
+                        break;
+                    case EventType.CoordinatorLeft:
+                        var cordinator = eventPacket.ChangedObject as CordinatorPacket;
+                        this.coordinators.delete(cordinator.Id);
+                        if (cordinator.Id == this.mainCoordinator)
+                            this.emit("coordinatorChanged", this.mainCoordinator);
+                        break;
+                    case EventType.MatchCreated:
+
+                    default:
+                        break;
+                }
+                break;
             case PacketTypes.ForwardingPacket:
                 var forwardPacket = packet.SpecificPacket as ForwardingPacket;
                 switch (forwardPacket.Type) {
                     case EventType.PlayerUpdated:
-                        var scoreUpdateUserPacket = forwardPacket.SpecificPacket as ScoreUpdateEventPacket;
-                        emit
+                        var scoreUpdateUserPacket = forwardPacket.SpecificPacket as EventPacket;
+                        this.emit("scoreUpdate", scoreUpdateUserPacket);
                         break;
 
                     default:
@@ -53,7 +81,9 @@ export class TASocket extends EventEmitter {
 }
 
 export interface TASocket {
-    on(event: string,)
+    on(event: "scoreUpdate", callback: (data: EventPacket) => void): this;
+    on(event: "coordinatorChanged", callback: (data: string | undefined) => void): this;
+    on(event: string, callback: (data: any) => void): this;
 }
 
 new TASocket();

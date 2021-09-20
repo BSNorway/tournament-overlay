@@ -4,7 +4,7 @@ export interface Packet {
     Id: string;
     From: string;
     Type: PacketTypes;
-    SpecificPacket: object;
+    SpecificPacket: EventPacket | ForwardingPacket | object;
 }
 
 export enum PacketTypes {
@@ -42,6 +42,14 @@ export enum EventType {
     HostRemoved
 }
 
+export enum BeatmapDifficulty {
+    Easy,
+    Normal,
+    Hard,
+    Expert,
+    ExpertPlus
+}
+
 export interface Team {
     Id: string;
     Name: string;
@@ -53,6 +61,11 @@ export interface StreamScreenCoordinates {
 }
 
 export interface User {
+    Id: string;
+    Name: string;
+}
+
+export interface Player extends User {
     UserId: string;
     Team: Team;
     PlayState: number;
@@ -66,13 +79,11 @@ export interface User {
     StreamScreenCoordinates: StreamScreenCoordinates;
     StreamDelayMs: number;
     StreamSyncStartMs: number;
-    Id: string;
-    Name: string;
 }
 
 export interface Characteristic {
     SerializedName: string;
-    Difficulties: number[];
+    Difficulties: BeatmapDifficulty[];
 }
 
 export interface Beatmap {
@@ -82,20 +93,34 @@ export interface Beatmap {
     Difficulty: number;
 }
 
+export interface MatchPacket {
+    Guid: string;
+    Players: Player[];
+    Leader: User;
+    SelectedLevel: any;
+    SelectedCharacteristic: Characteristic;
+    SelectedDifficulty: BeatmapDifficulty;
+}
+
 export interface SongFinishedPacket {
-    User: User;
+    User: Player;
     Beatmap: Beatmap;
     Type: number;
     Score: number;
 }
 
-export interface ScoreUpdateEventPacket {
-    Type: EventType.PlayerUpdated;
-    ChangedObject: User;
+export interface CordinatorPacket extends User {
+    GetIcon: string,
+    UserId: string
+}
+
+export interface EventPacket {
+    Type: EventType;
+    ChangedObject: object | Player;
 }
 
 export interface ForwardingPacket {
     ForwardTo: string[];
     Type: number;
-    SpecificPacket: object;
+    SpecificPacket: EventPacket | object;
 }
