@@ -1,12 +1,13 @@
 import EventEmitter from "events";
 import WebSocket from "isomorphic-ws";
 
-import { EventType, ForwardingPacket, Packet, PacketTypes, EventPacket, CordinatorPacket } from "./packet";
+import { EventType, ForwardingPacket, Packet, PacketTypes, EventPacket, CordinatorPacket, MatchPacket } from "./packet";
 
 export class TASocket extends EventEmitter {
     socket: WebSocket;
     coordinators: Map<string, string>;
     mainCoordinator?: string;
+    mainMatch: MatchPacket | null = null;
 
     constructor() {
         super();
@@ -55,7 +56,20 @@ export class TASocket extends EventEmitter {
                             this.emit("coordinatorChanged", this.mainCoordinator);
                         break;
                     case EventType.MatchCreated:
-
+                        var match = eventPacket.ChangedObject as MatchPacket;
+                        this.mainMatch = match;
+                        this.emit("matchChanged", this.mainMatch);
+                        break;
+                    case EventType.MatchUpdated:
+                        var match = eventPacket.ChangedObject as MatchPacket;
+                        this.mainMatch = match;
+                        this.emit("matchChanged", this.mainMatch);
+                        break;
+                    case EventType.MatchDeleted:
+                        var match = eventPacket.ChangedObject as MatchPacket;
+                        this.mainMatch = null;
+                        this.emit("matchChanged", this.mainMatch);
+                        break;
                     default:
                         break;
                 }
@@ -83,6 +97,7 @@ export class TASocket extends EventEmitter {
 export interface TASocket {
     on(event: "scoreUpdate", callback: (data: EventPacket) => void): this;
     on(event: "coordinatorChanged", callback: (data: string | undefined) => void): this;
+    on(event: "matchChanged", callback: (data: MatchPacket | null) => void): this;
     on(event: string, callback: (data: any) => void): this;
 }
 
