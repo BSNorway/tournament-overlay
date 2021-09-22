@@ -1,7 +1,15 @@
 import EventEmitter from "events";
+import { appendFileSync } from "fs";
 import WebSocket from "isomorphic-ws";
 
 import { EventType, ForwardingPacket, Packet, PacketTypes, EventPacket, CordinatorPacket, MatchPacket, SongFinishedPacket, ConnectPacket, ConnectTypes } from "./packet";
+
+enum LogSeverity {
+    Debug,
+    Info,
+    Warn,
+    Error
+}
 
 export class TASocket extends EventEmitter {
     socket: WebSocket;
@@ -10,13 +18,16 @@ export class TASocket extends EventEmitter {
     mainMatch: MatchPacket | null = null;
     mainPassword: string;
     shouldLog: boolean;
+    severity: LogSeverity;
 
     constructor();
     constructor(host: string);
     constructor(host: string, password: string)
     constructor(host: string, password: string, log: boolean)
-    constructor(host?: string, password?: string, log?: boolean) {
+    constructor(host: string, password: string, log: boolean, severity: LogSeverity)
+    constructor(host?: string, password?: string, log?: boolean, severity?: LogSeverity) {
         super();
+        this.severity = severity ?? LogSeverity.Info;
         this.shouldLog = log ?? false;
         this.mainPassword = password ?? "thisisthepasswordthatisusedwithoutconfiguringapasswordformaincoordinator";
         this.coordinators = new Map();
@@ -26,6 +37,12 @@ export class TASocket extends EventEmitter {
         this.socket.on('message', this.socketMessage.bind(this));
         this.on('matchChanged', console.log);
         this.on('scoreUpdate', console.log);
+        this.on('log', console.log);
+    }
+
+    log(data: any, severity: LogSeverity) {
+        if (this.shouldLog && severity >= this.severity)
+            this.emit("log", `[${LogSeverity[severity]}](${new Date(Date.now()).toJSON()}): ${JSON.stringify(data)}`);
     }
 
     setMainCoordinator(key: string | undefined) {
@@ -38,22 +55,22 @@ export class TASocket extends EventEmitter {
     }
 
     socketOpened(event: WebSocket.OpenEvent) {
-        console.log(`---------------------------------------------------------`);
-        console.log(`WebSocket connection Opened.`);
-        console.log(`---------------------------------------------------------`);
+        this.log(`---------------------------------------------------------`, LogSeverity.Info);
+        this.log(`WebSocket connection Opened.`, LogSeverity.Info);
+        this.log(`---------------------------------------------------------`, LogSeverity.Info);
     }
 
     socketClosed(event: WebSocket.CloseEvent) {
-        console.log(`---------------------------------------------------------`);
-        console.log(`WebSocket connection closed.\nReason: ${event.reason}\nCode: ${event.code}`);
-        console.log(`---------------------------------------------------------`);
+        this.log(`---------------------------------------------------------`, LogSeverity.Info);
+        this.log(`WebSocket connection closed.\nReason: ${event.reason}\nCode: ${event.code}`, LogSeverity.Info);
+        this.log(`---------------------------------------------------------`, LogSeverity.Info);
     }
 
     socketMessage(data: WebSocket.Data) {
         let packet = JSON.parse(data as string) as Packet;
         if (packet.Type !== PacketTypes.Command) {
-            console.log(`---------------------------------------------------------`);
-            console.log("Packet type: " + packet.Type);
+            this.log(`---------------------------------------------------------`, LogSeverity.Debug);
+            this.log("Packet type: " + packet.Type, LogSeverity.Debug);
         }
         switch (packet.Type) {
             case PacketTypes.Event:
@@ -126,12 +143,13 @@ export class TASocket extends EventEmitter {
                 //ignore command packets as they dont do anything for an overlay
                 break;
             default:
-                console.warn("Not handled");
+                this.log("Not handled", LogSeverity.Warn);
                 break;
         }
-        if (packet.Type !== PacketTypes.Command)
-            console.log(packet.SpecificPacket);
-        console.log(`---------------------------------------------------------`);
+        if (packet.Type !== PacketTypes.Command) {
+            this.log(packet.SpecificPacket, LogSeverity.Debug);
+            this.log(`---------------------------------------------------------`, LogSeverity.Debug);
+        }
     }
 }
 
@@ -139,7 +157,9 @@ export interface TASocket {
     on(event: "scoreUpdate", callback: (data: EventPacket) => void): this;
     on(event: "coordinatorChanged", callback: (data: string | undefined) => void): this;
     on(event: "matchChanged", callback: (data: MatchPacket | null) => void): this;
+    on(event: "log", callback: (data: any) => void): this;
     on(event: string, callback: (data: any) => void): this;
 }
 
-new TASocket("ta.wildwolf.dev", "justatestpasswordfornow", true);
+var taSocket = new TASocket("ta.wildwolf.dev", "justatestpasswordfornow", true, LogSeverity.Debug);
+taSocket.on('log', (data) => appendFileSync('./socket.log', data + "\n"));
