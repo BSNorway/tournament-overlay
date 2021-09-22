@@ -2,7 +2,7 @@ import EventEmitter from "events";
 import { appendFileSync } from "fs";
 import WebSocket from "isomorphic-ws";
 
-import { EventType, ForwardingPacket, Packet, PacketTypes, EventPacket, CordinatorPacket, MatchPacket, SongFinishedPacket, ConnectPacket, ConnectTypes } from "./packet";
+import { EventType, ForwardingPacket, Packet, PacketTypes, EventPacket, CordinatorPacket, MatchPacket, SongFinishedPacket, ConnectPacket, ConnectTypes, Player } from "./packet";
 
 enum LogSeverity {
     Debug,
@@ -14,6 +14,7 @@ enum LogSeverity {
 export class TASocket extends EventEmitter {
     socket: WebSocket;
     coordinators: Map<string, string>;
+    players: Map<string, Player>;
     mainCoordinator?: string;
     mainMatch: MatchPacket | null = null;
     mainPassword: string;
@@ -31,13 +32,26 @@ export class TASocket extends EventEmitter {
         this.shouldLog = log ?? false;
         this.mainPassword = password ?? "thisisthepasswordthatisusedwithoutconfiguringapasswordformaincoordinator";
         this.coordinators = new Map();
+        this.players = new Map();
         this.socket = new WebSocket(`ws://${host ?? "beatsaber.networkauditor.org"}:10157`);
         this.socket.on('open', this.socketOpened.bind(this));
         this.socket.on('close', this.socketClosed.bind(this));
         this.socket.on('message', this.socketMessage.bind(this));
-        this.on('matchChanged', console.log);
-        this.on('scoreUpdate', console.log);
+        this.on('matchChanged', (data) => this.log(data, LogSeverity.Info));
+        this.on('scoreUpdate', this.handleScoreUpdate.bind(this));
         this.on('log', console.log);
+    }
+
+    handleScoreUpdate(forwardTo: string[], eventPacket: EventPacket) {
+        if (forwardTo.includes(this.mainCoordinator ?? "")) {
+            this.packetProcess({ Type: PacketTypes.Event, SpecificPacket: eventPacket, From: "00000000-0000-0000-0000-000000000000", Id: this.mainCoordinator ?? "00000000-0000-0000-0000-000000000000", Size: 0, SpecificPacketSize: 0 })
+            if (!!this.mainMatch) {
+                var match = this.mainMatch;
+                match.Players = match.Players.map(t => t !== undefined ? this.players.get(t.Id) as Player : undefined) as Player[];
+                this.mainMatch = match;
+                this.emit("matchChanged", this.mainMatch);
+            }
+        }
     }
 
     log(data: any, severity: LogSeverity) {
@@ -72,10 +86,27 @@ export class TASocket extends EventEmitter {
             this.log(`---------------------------------------------------------`, LogSeverity.Debug);
             this.log("Packet type: " + packet.Type, LogSeverity.Debug);
         }
+        this.packetProcess(packet);
+        if (packet.Type !== PacketTypes.Command) {
+            this.log(packet.SpecificPacket, LogSeverity.Debug);
+            this.log(`---------------------------------------------------------`, LogSeverity.Debug);
+        }
+    }
+
+    packetProcess(packet: Packet) {
         switch (packet.Type) {
             case PacketTypes.Event:
                 let eventPacket = packet.SpecificPacket as EventPacket;
                 switch (eventPacket.Type) {
+                    case EventType.PlayerAdded:
+                    case EventType.PlayerUpdated:
+                        var player = eventPacket.ChangedObject as Player;
+                        this.players.set(player.Id, player);
+                        break;
+                    case EventType.PlayerLeft:
+                        var player = eventPacket.ChangedObject as Player;
+                        this.players.delete(player.Id);
+                        break;
                     case EventType.CoordinatorAdded:
                         var coordinator = eventPacket.ChangedObject as CordinatorPacket;
                         this.coordinators.set(coordinator.Id, coordinator.Name)
@@ -111,9 +142,10 @@ export class TASocket extends EventEmitter {
             case PacketTypes.ForwardingPacket:
                 let forwardPacket = packet.SpecificPacket as ForwardingPacket;
                 switch (forwardPacket.Type) {
-                    case EventType.PlayerUpdated:
-                        let scoreUpdateUserPacket = forwardPacket.SpecificPacket as EventPacket;
-                        this.emit("scoreUpdate", scoreUpdateUserPacket);
+                    case PacketTypes.Event:
+                        let eventPacket = forwardPacket.SpecificPacket as EventPacket;
+                        if (eventPacket.Type == EventType.PlayerUpdated)
+                            this.emit("scoreUpdate", forwardPacket.ForwardTo, eventPacket.ChangedObject as Player);
                         break;
 
                     default:
@@ -122,6 +154,7 @@ export class TASocket extends EventEmitter {
                 break;
             case PacketTypes.SongFinished:
                 let songPacket = packet.SpecificPacket as SongFinishedPacket;
+                this.players.set(songPacket.User.Id, songPacket.User);
                 break;
             case PacketTypes.Connect:
                 let connectPacket = packet.SpecificPacket as ConnectPacket;
@@ -146,20 +179,20 @@ export class TASocket extends EventEmitter {
                 this.log("Not handled", LogSeverity.Warn);
                 break;
         }
-        if (packet.Type !== PacketTypes.Command) {
-            this.log(packet.SpecificPacket, LogSeverity.Debug);
-            this.log(`---------------------------------------------------------`, LogSeverity.Debug);
-        }
     }
 }
 
 export interface TASocket {
-    on(event: "scoreUpdate", callback: (data: EventPacket) => void): this;
+    on(event: "scoreUpdate", callback: (forwardTo: string[], eventPacket: EventPacket) => void): this;
     on(event: "coordinatorChanged", callback: (data: string | undefined) => void): this;
     on(event: "matchChanged", callback: (data: MatchPacket | null) => void): this;
     on(event: "log", callback: (data: any) => void): this;
     on(event: string, callback: (data: any) => void): this;
+    emit(event: "scoreUpdate", forwardTo: string[], eventPacket: EventPacket): boolean;
+    emit(event: "coordinatorChanged", data: string | undefined): boolean;
+    emit(event: "matchChanged", data: MatchPacket | null): boolean;
+    emit(event: string | symbol, ...args: any[]): boolean;
 }
 
-var taSocket = new TASocket("ta.wildwolf.dev", "justatestpasswordfornow", true, LogSeverity.Debug);
+var taSocket = new TASocket("ta.wildwolf.dev", "justatestpasswordfornow", true, LogSeverity.Info);
 taSocket.on('log', (data) => appendFileSync('./socket.log', data + "\n"));

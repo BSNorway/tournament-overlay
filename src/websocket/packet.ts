@@ -133,7 +133,7 @@ export interface EventPacket {
 
 export interface ForwardingPacket {
     ForwardTo: string[];
-    Type: number;
+    Type: PacketTypes;
     SpecificPacket: EventPacket | object;
 }
 
