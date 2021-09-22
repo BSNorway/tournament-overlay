@@ -50,6 +50,18 @@ export enum BeatmapDifficulty {
     ExpertPlus
 }
 
+export enum CompletionType {
+    Passed,
+    Failed,
+    Quit
+}
+
+export enum ConnectTypes {
+    Player,
+    Coordinator,
+    TemporaryConnection
+}
+
 export interface Team {
     Id: string;
     Name: string;
@@ -105,7 +117,7 @@ export interface MatchPacket {
 export interface SongFinishedPacket {
     User: Player;
     Beatmap: Beatmap;
-    Type: number;
+    Type: CompletionType;
     Score: number;
 }
 
@@ -123,4 +135,12 @@ export interface ForwardingPacket {
     ForwardTo: string[];
     Type: number;
     SpecificPacket: EventPacket | object;
+}
+
+export interface ConnectPacket {
+    ClientType: ConnectTypes;
+    Name: string;
+    Password: string;
+    UserId: string;
+    ClientVersion: number;
 }
