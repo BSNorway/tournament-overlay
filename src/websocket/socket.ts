@@ -1,10 +1,9 @@
 import EventEmitter from "events";
-import { appendFileSync } from "fs";
 import WebSocket from "isomorphic-ws";
 
 import { EventType, ForwardingPacket, Packet, PacketTypes, EventPacket, CordinatorPacket, MatchPacket, SongFinishedPacket, ConnectPacket, ConnectTypes, Player } from "./packet";
 
-enum LogSeverity {
+export enum LogSeverity {
     Debug,
     Info,
     Warn,
@@ -34,12 +33,29 @@ export class TASocket extends EventEmitter {
         this.coordinators = new Map();
         this.players = new Map();
         this.socket = new WebSocket(`ws://${host ?? "beatsaber.networkauditor.org"}:10157`);
-        this.socket.on('open', this.socketOpened.bind(this));
-        this.socket.on('close', this.socketClosed.bind(this));
-        this.socket.on('message', this.socketMessage.bind(this));
-        this.on('matchChanged', (data) => this.log(data, LogSeverity.Info));
+        if (typeof window === "undefined") {
+            this.socket.on('open', this.socketOpened.bind(this));
+            this.socket.on('close', this.socketClosed.bind(this));
+            this.socket.on('message', this.socketMessage.bind(this));
+        }
+        else {
+            this.socket.onmessage = this.socketMessage.bind(this);
+            this.socket.onclose = this.socketClosed.bind(this);
+            this.socket.onopen = this.socketOpened.bind(this);
+        }
         this.on('scoreUpdate', this.handleScoreUpdate.bind(this));
         this.on('log', console.log);
+        // this.sendHeartbeats();
+    }
+
+    sendHeartbeats() {
+        if (this.socket.readyState !== WebSocket.CLOSED) {
+            var packet: Packet = { Id: "00000000-0000-0000-0000-000000000000", From: "00000000-0000-0000-0000-000000000000", Size: 0, SpecificPacketSize: 0, Type: PacketTypes.Command, SpecificPacket: { CommandType: 0 } };
+            this.socket.send(JSON.stringify(packet));
+            setTimeout(() => {
+                this.sendHeartbeats();
+            }, 20000);
+        }
     }
 
     handleScoreUpdate(forwardTo: string[], eventPacket: EventPacket) {
@@ -80,7 +96,8 @@ export class TASocket extends EventEmitter {
         this.log(`---------------------------------------------------------`, LogSeverity.Info);
     }
 
-    socketMessage(data: WebSocket.Data) {
+    socketMessage(data: WebSocket.Data | WebSocket.MessageEvent) {
+        data = (typeof data === "object") ? (data as WebSocket.MessageEvent).data : data;
         let packet = JSON.parse(data as string) as Packet;
         if (packet.Type !== PacketTypes.Command) {
             this.log(`---------------------------------------------------------`, LogSeverity.Debug);
@@ -186,13 +203,11 @@ export interface TASocket {
     on(event: "scoreUpdate", callback: (forwardTo: string[], eventPacket: EventPacket) => void): this;
     on(event: "coordinatorChanged", callback: (data: string | undefined) => void): this;
     on(event: "matchChanged", callback: (data: MatchPacket | null) => void): this;
-    on(event: "log", callback: (data: any) => void): this;
+    on(event: "log", callback: (data: string) => void): this;
     on(event: string, callback: (data: any) => void): this;
     emit(event: "scoreUpdate", forwardTo: string[], eventPacket: EventPacket): boolean;
     emit(event: "coordinatorChanged", data: string | undefined): boolean;
     emit(event: "matchChanged", data: MatchPacket | null): boolean;
+    emit(event: "log", data: string): boolean;
     emit(event: string | symbol, ...args: any[]): boolean;
 }
-
-var taSocket = new TASocket("ta.wildwolf.dev", "justatestpasswordfornow", true, LogSeverity.Info);
-taSocket.on('log', (data) => appendFileSync('./socket.log', data + "\n"));
