@@ -23,8 +23,8 @@ export default class UserView1 extends Component<{ right?: boolean, percent: num
                 <div className="name">
                     <span ref={this.textRef}>{this.props.children}</span>
                 </div>
-                <div className="score">
-                    <span className="percent">{this.props.percent * 100}%
+                <div className={"score" + (this.props.fill > 0 ? " lead" : "")}>
+                    <span className="percent">{this.props.percent}%
                     </span>
                     <span className="number">{this.props.score}
                     </span>

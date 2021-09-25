@@ -14,7 +14,7 @@ export class TASocket extends EventEmitter {
     socket: WebSocket;
     coordinators: Map<string, string>;
     players: Map<string, Player>;
-    mainCoordinator?: string;
+    mainCoordinator?: string;/*= "e833f2cd-c124-499a-8140-b9d359e78980"; //*/
     mainMatch: MatchPacket | null = null;
     mainPassword: string;
     shouldLog: boolean;
@@ -27,25 +27,31 @@ export class TASocket extends EventEmitter {
     constructor(host: string, password: string, log: boolean, severity: LogSeverity)
     constructor(host?: string, password?: string, log?: boolean, severity?: LogSeverity) {
         super();
+        this.socketOpened = this.socketOpened.bind(this);
+        this.socketClosed = this.socketClosed.bind(this);
+        this.socketMessageEvent = this.socketMessageEvent.bind(this);
+        this.socketMessageData = this.socketMessageData.bind(this);
+        this.handleScoreUpdate = this.handleScoreUpdate.bind(this);
+        this.log = this.log.bind(this);
         this.severity = severity ?? LogSeverity.Info;
         this.shouldLog = log ?? false;
         this.mainPassword = password ?? "thisisthepasswordthatisusedwithoutconfiguringapasswordformaincoordinator";
         this.coordinators = new Map();
         this.players = new Map();
-        this.socket = new WebSocket(`ws://${host ?? "beatsaber.networkauditor.org"}:10157`);
+        this.socket = new WebSocket(`ws://ta.wildwolf.dev:8080?host=${host ?? "beatsaber.networkauditor.org"}&port=10157`);
         if (typeof window === "undefined") {
-            this.socket.on('open', this.socketOpened.bind(this));
-            this.socket.on('close', this.socketClosed.bind(this));
-            this.socket.on('message', this.socketMessage.bind(this));
+            this.socket.on('open', this.socketOpened);
+            this.socket.on('close', this.socketClosed);
+            this.socket.on('message', this.socketMessageData);
         }
         else {
-            this.socket.onmessage = this.socketMessage.bind(this);
-            this.socket.onclose = this.socketClosed.bind(this);
-            this.socket.onopen = this.socketOpened.bind(this);
+            this.socket.addEventListener("message", this.socketMessageEvent);
+            this.socket.onclose = this.socketClosed;
+            this.socket.onopen = this.socketOpened;
         }
-        this.on('scoreUpdate', this.handleScoreUpdate.bind(this));
+        this.on("coordinatorChanged", this.log);
+        this.on('scoreUpdate', this.handleScoreUpdate);
         this.on('log', console.log);
-        // this.sendHeartbeats();
     }
 
     sendHeartbeats() {
@@ -58,19 +64,19 @@ export class TASocket extends EventEmitter {
         }
     }
 
-    handleScoreUpdate(forwardTo: string[], eventPacket: EventPacket) {
+    handleScoreUpdate(forwardTo: string[], eventPacket: Player) {
         if (forwardTo.includes(this.mainCoordinator ?? "")) {
-            this.packetProcess({ Type: PacketTypes.Event, SpecificPacket: eventPacket, From: "00000000-0000-0000-0000-000000000000", Id: this.mainCoordinator ?? "00000000-0000-0000-0000-000000000000", Size: 0, SpecificPacketSize: 0 })
             if (!!this.mainMatch) {
                 var match = this.mainMatch;
-                match.Players = match.Players.map(t => t !== undefined ? this.players.get(t.Id) as Player : undefined) as Player[];
+                match.Players = match.Players.map(t => t !== undefined ? t.Id === eventPacket.Id ? eventPacket : t : undefined) as Player[];
                 this.mainMatch = match;
                 this.emit("matchChanged", this.mainMatch);
             }
         }
     }
 
-    log(data: any, severity: LogSeverity) {
+    log(data: any, severity?: LogSeverity) {
+        if (typeof severity == "undefined") severity = LogSeverity.Info;
         if (this.shouldLog && severity >= this.severity)
             this.emit("log", `[${LogSeverity[severity]}](${new Date(Date.now()).toJSON()}): ${JSON.stringify(data)}`);
     }
@@ -87,6 +93,7 @@ export class TASocket extends EventEmitter {
     socketOpened(event: WebSocket.OpenEvent) {
         this.log(`---------------------------------------------------------`, LogSeverity.Info);
         this.log(`WebSocket connection Opened.`, LogSeverity.Info);
+        this.log(`pasword: ${this.mainPassword}`, LogSeverity.Info);
         this.log(`---------------------------------------------------------`, LogSeverity.Info);
     }
 
@@ -96,8 +103,11 @@ export class TASocket extends EventEmitter {
         this.log(`---------------------------------------------------------`, LogSeverity.Info);
     }
 
-    socketMessage(data: WebSocket.Data | WebSocket.MessageEvent) {
-        data = (typeof data === "object") ? (data as WebSocket.MessageEvent).data : data;
+    socketMessageEvent(data: WebSocket.MessageEvent) {
+        this.socketMessageData(data.data);
+    }
+
+    socketMessageData(data: WebSocket.Data) {
         let packet = JSON.parse(data as string) as Packet;
         if (packet.Type !== PacketTypes.Command) {
             this.log(`---------------------------------------------------------`, LogSeverity.Debug);
@@ -200,12 +210,12 @@ export class TASocket extends EventEmitter {
 }
 
 export interface TASocket {
-    on(event: "scoreUpdate", callback: (forwardTo: string[], eventPacket: EventPacket) => void): this;
+    on(event: "scoreUpdate", callback: (forwardTo: string[], eventPacket: Player) => void): this;
     on(event: "coordinatorChanged", callback: (data: string | undefined) => void): this;
     on(event: "matchChanged", callback: (data: MatchPacket | null) => void): this;
     on(event: "log", callback: (data: string) => void): this;
     on(event: string, callback: (data: any) => void): this;
-    emit(event: "scoreUpdate", forwardTo: string[], eventPacket: EventPacket): boolean;
+    emit(event: "scoreUpdate", forwardTo: string[], eventPacket: Player): boolean;
     emit(event: "coordinatorChanged", data: string | undefined): boolean;
     emit(event: "matchChanged", data: MatchPacket | null): boolean;
     emit(event: "log", data: string): boolean;
