@@ -39,7 +39,8 @@ export enum EventType {
     QualifierEventUpdated,
     QualifierEventDeleted,
     HostAdded,
-    HostRemoved
+    HostRemoved,
+    PointChanged
 }
 
 export enum BeatmapDifficulty {
@@ -128,7 +129,12 @@ export interface CordinatorPacket extends User {
 
 export interface EventPacket {
     Type: EventType;
-    ChangedObject: object | Player;
+    ChangedObject: object | Player | PointEvent;
+}
+
+export interface PointEvent {
+    Team1: number;
+    Team2: number;
 }
 
 export interface ForwardingPacket {

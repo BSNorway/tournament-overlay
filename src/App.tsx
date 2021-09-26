@@ -3,7 +3,7 @@ import { Toast, ToastBody } from 'reactstrap';
 import './App.scss';
 import Score from './Score';
 import UserView1 from './UserView2';
-import { MatchPacket, Player } from './websocket/packet';
+import { MatchPacket, Player, PointEvent } from './websocket/packet';
 import { TASocket } from './websocket/socket';
 
 function toFixedDown(number: number, digits: number) {
@@ -12,7 +12,7 @@ function toFixedDown(number: number, digits: number) {
   return m ? parseFloat(m[1]) : number.valueOf();
 };
 
-export default class App extends Component<any, { infoToast: string[], infoToastShow: boolean, match?: MatchPacket }> {
+export default class App extends Component<any, { infoToast: string[], infoToastShow: boolean, match?: MatchPacket, points: PointEvent }> {
   socket?: TASocket;
 
   constructor(props: any) {
@@ -20,11 +20,16 @@ export default class App extends Component<any, { infoToast: string[], infoToast
     this.state = {
       infoToast: [""],
       infoToastShow: false,
-      match: undefined
+      match: undefined,
+      points: {
+        Team1: 0,
+        Team2: 0
+      }
     }
     this.coordinatorChanged = this.coordinatorChanged.bind(this);
     this.handleMatchEvent = this.handleMatchEvent.bind(this);
     this.handleLog = this.handleLog.bind(this);
+    this.handlePoints = this.handlePoints.bind(this);
   }
 
   componentDidMount() {
@@ -35,6 +40,11 @@ export default class App extends Component<any, { infoToast: string[], infoToast
     this.socket.on("coordinatorChanged", this.coordinatorChanged);
     this.socket.on("matchChanged", this.handleMatchEvent);
     this.socket.on("log", this.handleLog);
+    this.socket.on("pointsChanged", this.handlePoints)
+  }
+
+  handlePoints(data: PointEvent) {
+    this.setState({ points: data });
   }
 
   handleLog(data: string) {
@@ -74,11 +84,11 @@ export default class App extends Component<any, { infoToast: string[], infoToast
     }
     return (
       <div className="App">
-        <div style={{ position: "fixed" }}>
-          {/* <Score></Score> */}
+        <div>
+          <Score points={this.state.points}></Score>
           {/* <Toast isOpen={true} color="warning">
             <ToastBody>
-              {this.state.infoToast.slice(0, 5).map(t => (<div>{t}<br /></div>))}
+              {text.slice(0, 5).map(t => (<div>{t}<br /></div>))}
             </ToastBody>
           </Toast> */}
         </div>
