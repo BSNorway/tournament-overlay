@@ -1,6 +1,6 @@
 $top-dist: 722px;
-$fill-color: red;
-$generic-color: black;
+$fill-color: rgb(54, 0, 104);
+$generic-color: rgb(75, 75, 75);
 
 .userView {
     aspect-ratio: 4/3;
@@ -11,6 +11,7 @@ $generic-color: black;
     position: absolute;
     z-index: 10;
     background-color: $generic-color;
+    color: $generic-color;
     .tug {
         top: $top-dist;
         height: 10px;
@@ -23,7 +24,7 @@ $generic-color: black;
             height: 0;
             width: 0;
             content: "";
-            border-bottom: 10px solid $generic-color;
+            border-bottom: 10px solid $fill-color;
             border-left: 10px solid transparent;
             display: block;
         }
@@ -77,6 +78,7 @@ $generic-color: black;
             line-height: 38px;
             font-size: 24px;
             display: inline-block;
+            color: $generic-color;
         }
     }
     .score {
@@ -106,10 +108,12 @@ $generic-color: black;
         &.lead {
             .percent {
                 font-size: 36px;
+                color: black;
             }
             .number {
                 top: 40px;
                 font-size: 16px;
+                color: black;
             }
         }
         .percent {
@@ -118,6 +122,7 @@ $generic-color: black;
             font-size: 24px;
             padding: 0 4px;
             transition: font-size linear 0.05s;
+            color: $generic-color;
         }
         .number {
             right: 0;
@@ -126,6 +131,7 @@ $generic-color: black;
             padding: 0 4px;
             font-size: 12px;
             transition: font-size linear 0.05s, top linear 0.05s;
+            color: $generic-color;
         }
     }
     &.right {
