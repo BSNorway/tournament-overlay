@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import './App.scss';
 import Score from './Score';
 import UserView1 from './UserView2';
-import { MatchPacket, PointEvent } from './websocket/packet';
+import { MatchPacket } from './websocket/packet';
 import { TASocket } from './websocket/socket';
 
 function toFixedDown(number: number, digits: number) {
@@ -12,7 +12,7 @@ function toFixedDown(number: number, digits: number) {
   return m ? parseFloat(m[1]) : number.valueOf();
 };
 
-export default class App extends Component<any, { infoToast: string[], infoToastShow: boolean, match?: MatchPacket, points: PointEvent }> {
+export default class App extends Component<any, { infoToast: string[], infoToastShow: boolean, match?: MatchPacket }> {
   socket?: TASocket;
 
   constructor(props: any) {
@@ -20,16 +20,11 @@ export default class App extends Component<any, { infoToast: string[], infoToast
     this.state = {
       infoToast: [""],
       infoToastShow: false,
-      match: undefined,
-      points: {
-        Team1: 0,
-        Team2: 0
-      }
+      match: undefined
     }
     this.coordinatorChanged = this.coordinatorChanged.bind(this);
     this.handleMatchEvent = this.handleMatchEvent.bind(this);
     this.handleLog = this.handleLog.bind(this);
-    this.handlePoints = this.handlePoints.bind(this);
   }
 
   componentDidMount() {
@@ -40,11 +35,6 @@ export default class App extends Component<any, { infoToast: string[], infoToast
     this.socket.on("coordinatorChanged", this.coordinatorChanged);
     this.socket.on("matchChanged", this.handleMatchEvent);
     this.socket.on("log", this.handleLog);
-    this.socket.on("pointsChanged", this.handlePoints)
-  }
-
-  handlePoints(data: PointEvent) {
-    this.setState({ points: data });
   }
 
   handleLog(data: string) {
@@ -85,7 +75,7 @@ export default class App extends Component<any, { infoToast: string[], infoToast
     return (
       <div className="App">
         <div>
-          <Score points={this.state.points}></Score>
+          {/* <Score points={this.state.points}></Score> */}{/* this needs to be done tourney specific as this works differently each tourney */}
           {/* <Toast isOpen={true} color="warning">
             <ToastBody>
               {text.slice(0, 5).map(t => (<div>{t}<br /></div>))}

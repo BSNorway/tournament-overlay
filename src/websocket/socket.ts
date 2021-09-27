@@ -1,7 +1,7 @@
 import EventEmitter from "events";
 import WebSocket from "isomorphic-ws";
 
-import { EventType, ForwardingPacket, Packet, PacketTypes, EventPacket, CordinatorPacket, MatchPacket, SongFinishedPacket, ConnectPacket, ConnectTypes, Player, PointEvent } from "./packet";
+import { EventType, ForwardingPacket, Packet, PacketTypes, EventPacket, CordinatorPacket, MatchPacket, SongFinishedPacket, ConnectPacket, ConnectTypes, Player } from "./packet";
 
 export enum LogSeverity {
     Debug,
@@ -165,10 +165,6 @@ export class TASocket extends EventEmitter {
                             this.mainMatch = null;
                         this.emit("matchChanged", this.mainMatch);
                         break;
-                    case EventType.PointChanged:
-                        var points = eventPacket.ChangedObject as PointEvent;
-                        this.emit("pointsChanged", points);
-                        break;
                     default:
                         break;
                 }
@@ -220,13 +216,11 @@ export interface TASocket {
     on(event: "scoreUpdate", callback: (forwardTo: string[], eventPacket: Player) => void): this;
     on(event: "coordinatorChanged", callback: (data: string | undefined) => void): this;
     on(event: "matchChanged", callback: (data: MatchPacket | null) => void): this;
-    on(event: "pointsChanged", callback: (data: PointEvent) => void): this;
     on(event: "log", callback: (data: string) => void): this;
     on(event: string, callback: (data: any) => void): this;
     emit(event: "scoreUpdate", forwardTo: string[], eventPacket: Player): boolean;
     emit(event: "coordinatorChanged", data: string | undefined): boolean;
     emit(event: "matchChanged", data: MatchPacket | null): boolean;
-    emit(event: "pointsChanged", data: PointEvent): boolean;
     emit(event: "log", data: string): boolean;
     emit(event: string | symbol, ...args: any[]): boolean;
 }

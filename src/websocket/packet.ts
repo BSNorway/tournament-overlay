@@ -129,12 +129,7 @@ export interface CordinatorPacket extends User {
 
 export interface EventPacket {
     Type: EventType;
-    ChangedObject: object | Player | PointEvent;
-}
-
-export interface PointEvent {
-    Team1: number;
-    Team2: number;
+    ChangedObject: object | Player;
 }
 
 export interface ForwardingPacket {

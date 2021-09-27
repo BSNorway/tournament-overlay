@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import "./Score.scss";
-import { PointEvent } from "./websocket/packet";
-export default class Score extends Component<{ points: PointEvent }> {
+export default class Score extends Component {
     render() {
         return (<div id="scorebar">
             <div>
@@ -13,15 +12,15 @@ export default class Score extends Component<{ points: PointEvent }> {
                 <div className="line reverse" style={{ right: 130 }}></div>
                 {
                     Array.apply(null, Array(2)).map((_, i) => (
-                        <div className={"point" + (this.props.points.Team1 > i ? "" : " hidden")} style={{ left: 65 - i * 65 }}></div>
+                        <div className={"point" + (0/* add point logic for team 1 here*/ > i ? "" : " hidden")} style={{ left: 65 - i * 65 }}></div>
                     ))
                 }
                 {
                     Array.apply(null, Array(2)).map((_, i) => (
-                        <div className={"point reverse" + (this.props.points.Team2 > i ? "" : " hidden")} style={{ right: 65 - i * 65 }}></div>
+                        <div className={"point reverse" + (0/* add point logic for team 2 here*/ > i ? "" : " hidden")} style={{ right: 65 - i * 65 }}></div>
                     ))
                 }
-                <div className="devider">{this.props.points.Team1} - {this.props.points.Team2}</div>
+                <div className="devider">{0/* add point logic for team 1 here*/} - {0/* add point logic for team 2 here*/}</div>
             </div>
         </div>);
     }
