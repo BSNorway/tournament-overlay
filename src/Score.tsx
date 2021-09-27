@@ -12,13 +12,13 @@ export default class Score extends Component<{ points: PointEvent }> {
                 <div className="line reverse" style={{ right: 65 }}></div>
                 <div className="line reverse" style={{ right: 130 }}></div>
                 {
-                    new Array(2).map((_, i) => (
-                        <div className={"point" + (this.props.points.Team1 > i ? "" : " hidden")} style={{ left: i * 65 }}></div>
+                    Array.apply(null, Array(2)).map((_, i) => (
+                        <div className={"point" + (this.props.points.Team1 > i ? "" : " hidden")} style={{ left: 65 - i * 65 }}></div>
                     ))
                 }
                 {
-                    new Array(2).map((_, i) => (
-                        <div className={"point reverse" + (this.props.points.Team2 > i ? "" : " hidden")} style={{ left: i * 65 }}></div>
+                    Array.apply(null, Array(2)).map((_, i) => (
+                        <div className={"point reverse" + (this.props.points.Team2 > i ? "" : " hidden")} style={{ right: 65 - i * 65 }}></div>
                     ))
                 }
                 <div className="devider">{this.props.points.Team1} - {this.props.points.Team2}</div>

@@ -1,14 +1,16 @@
 $top-dist: 722px;
+$fill-color: red;
+$generic-color: black;
 
 .userView {
     aspect-ratio: 4/3;
     max-width: 960px;
     width: 960px;
-    border-top: 1px solid black;
-    border-bottom: 1px solid black;
+    border-top: 1px solid $generic-color;
+    border-bottom: 1px solid $generic-color;
     position: absolute;
     z-index: 10;
-    background-color: black;
+    background-color: $generic-color;
     .tug {
         top: $top-dist;
         height: 10px;
@@ -21,7 +23,7 @@ $top-dist: 722px;
             height: 0;
             width: 0;
             content: "";
-            border-bottom: 10px solid black;
+            border-bottom: 10px solid $generic-color;
             border-left: 10px solid transparent;
             display: block;
         }
@@ -31,7 +33,7 @@ $top-dist: 722px;
             height: 0;
             width: 0;
             content: "";
-            border-top: 10px solid black;
+            border-top: 10px solid $generic-color;
             border-right: 10px solid transparent;
             display: block;
         }
@@ -43,26 +45,26 @@ $top-dist: 722px;
             z-index: -5;
             transition: width ease-in-out 0.15s;
             width: 0%;
-            background-color: red;
+            background-color: $fill-color;
             height: 10px;
         }
     }
     .divisor {
         position: relative;
         top: $top-dist;
-        border-top: 1px solid black;
+        border-top: 1px solid $generic-color;
     }
     .name {
         position: inherit;
         top: $top-dist + 10px;
         height: 40px;
         width: 250px;
-        border-bottom: 1px solid black;
+        border-bottom: 1px solid $generic-color;
         &::before {
             position: inherit;
             content: "";
             display: inline-block;
-            border-bottom: 1px solid black;
+            border-bottom: 1px solid $generic-color;
             width: 56.75px;
             right: 0;
             transform: rotate(-45deg) translateY(48.25px) translateX(20.25px);
@@ -83,12 +85,12 @@ $top-dist: 722px;
         right: 0px;
         height: 70px;
         width: 150px;
-        border-bottom: 1px solid black;
+        border-bottom: 1px solid $generic-color;
         &::before {
             position: inherit;
             content: "";
             display: inline-block;
-            border-bottom: 1px solid black;
+            border-bottom: 1px solid $generic-color;
             width: 100px;
             transform: rotate(45deg) translateY(85px) translateX(-35.5px);
         }
@@ -97,7 +99,7 @@ $top-dist: 722px;
             top: 0;
             right: 0;
             content: "";
-            border-right: 1px solid black;
+            border-right: 1px solid $generic-color;
             display: inline-block;
             height: 100%;
         }

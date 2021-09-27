@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import { Toast, ToastBody } from 'reactstrap';
+// import { Toast, ToastBody } from 'reactstrap';
 import './App.scss';
 import Score from './Score';
 import UserView1 from './UserView2';
-import { MatchPacket, Player, PointEvent } from './websocket/packet';
+import { MatchPacket, PointEvent } from './websocket/packet';
 import { TASocket } from './websocket/socket';
 
 function toFixedDown(number: number, digits: number) {
@@ -71,7 +71,7 @@ export default class App extends Component<any, { infoToast: string[], infoToast
     var fillWidth = 0;
     var team1 = { score: 0, accuracy: 0, name: "WildWolf" }
     var team2 = { score: 0, accuracy: 0, name: "Acetari" }
-    var text = this.state.infoToast;
+    // var text = this.state.infoToast;
     if (!!this.state.match && this.state.match.Players.length >= 2) {
       fillWidth = this.state.match.Players[0].Accuracy - this.state.match.Players[1].Accuracy;
       fillWidth = Math.round(fillWidth * 1000);

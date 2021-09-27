@@ -1,3 +1,7 @@
+$fill-color: rgba(98, 0, 255, 0.623);
+$inset-color: white;
+$generic-color: black;
+
 #scorebar {
     height: 40px;
     width: 100%;
@@ -8,7 +12,7 @@
 #scorebar > div {
     width: 25%;
     height: 100%;
-    border-bottom: 2px solid black;
+    border-bottom: 2px solid $generic-color;
     position: relative;
     display: flex;
     justify-content: center;
@@ -17,7 +21,7 @@
     position: absolute;
     width: 60px;
     transform: rotate(45deg) translateX(-22px) translateY(49px);
-    border-bottom: 2px solid black;
+    border-bottom: 2px solid $generic-color;
     left: attr(data-left);
     &.reverse {
         transform: rotate(-45deg) translateX(22px) translateY(49px);
@@ -29,11 +33,19 @@
     top: 1px;
     width: 55px;
     transform: skew(45deg) translateX(-17px);
-    border: 2px solid black;
-    background-color: #777;
-    box-shadow: inset 0 0 5px white;
+    border: 2px solid $generic-color;
+    background-color: $fill-color;
+    box-shadow: inset 0 0 5px $inset-color;
+    transition: opacity 0.25s ease-in-out, transform 0.2s ease-in-out;
     &.reverse {
         transform: skew(-45deg) translateX(18px);
+    }
+    &.hidden {
+        opacity: 0;
+        transform: rotate(90deg) skew(65deg) translateX(-17px);
+        &.reverse {
+            transform: rotate(90deg) skew(75deg) translateX(18px);
+        }
     }
 }
 .devider {

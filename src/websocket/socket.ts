@@ -76,7 +76,7 @@ export class TASocket extends EventEmitter {
     }
 
     log(data: any, severity?: LogSeverity) {
-        if (typeof severity == "undefined") severity = LogSeverity.Info;
+        if (typeof severity === "undefined") severity = LogSeverity.Info;
         if (this.shouldLog && severity >= this.severity)
             this.emit("log", `[${LogSeverity[severity]}](${new Date(Date.now()).toJSON()}): ${JSON.stringify(data)}`);
     }
@@ -87,7 +87,7 @@ export class TASocket extends EventEmitter {
     }
 
     getCoordinatorKeyFromName(name: string) {
-        return Array.from(this.coordinators.entries()).find(t => t[1] == name)?.[0];
+        return Array.from(this.coordinators.entries()).find(t => t[1] === name)?.[0];
     }
 
     socketOpened(event: WebSocket.OpenEvent) {
@@ -124,41 +124,44 @@ export class TASocket extends EventEmitter {
         switch (packet.Type) {
             case PacketTypes.Event:
                 let eventPacket = packet.SpecificPacket as EventPacket;
+                var player: Player | null = null;
+                var coordinator: CordinatorPacket | null = null;
+                var match: MatchPacket | null = null;
                 switch (eventPacket.Type) {
                     case EventType.PlayerAdded:
                     case EventType.PlayerUpdated:
-                        var player = eventPacket.ChangedObject as Player;
+                        player = eventPacket.ChangedObject as Player;
                         this.players.set(player.Id, player);
                         break;
                     case EventType.PlayerLeft:
-                        var player = eventPacket.ChangedObject as Player;
+                        player = eventPacket.ChangedObject as Player;
                         this.players.delete(player.Id);
                         break;
                     case EventType.CoordinatorAdded:
-                        var coordinator = eventPacket.ChangedObject as CordinatorPacket;
+                        coordinator = eventPacket.ChangedObject as CordinatorPacket;
                         this.coordinators.set(coordinator.Id, coordinator.Name)
                         break;
                     case EventType.CoordinatorLeft:
-                        var coordinator = eventPacket.ChangedObject as CordinatorPacket;
+                        coordinator = eventPacket.ChangedObject as CordinatorPacket;
                         this.coordinators.delete(coordinator.Id);
-                        if (coordinator.Id == this.mainCoordinator)
+                        if (coordinator.Id === this.mainCoordinator)
                             this.setMainCoordinator(undefined);
                         break;
                     case EventType.MatchCreated:
-                        var match = eventPacket.ChangedObject as MatchPacket;
-                        if (match.Leader.Id == this.mainCoordinator)
+                        match = eventPacket.ChangedObject as MatchPacket;
+                        if (match.Leader.Id === this.mainCoordinator)
                             this.mainMatch = match;
                         this.emit("matchChanged", this.mainMatch);
                         break;
                     case EventType.MatchUpdated:
-                        var match = eventPacket.ChangedObject as MatchPacket;
-                        if (match.Leader.Id == this.mainCoordinator)
+                        match = eventPacket.ChangedObject as MatchPacket;
+                        if (match.Leader.Id === this.mainCoordinator)
                             this.mainMatch = match;
                         this.emit("matchChanged", this.mainMatch);
                         break;
                     case EventType.MatchDeleted:
-                        var match = eventPacket.ChangedObject as MatchPacket;
-                        if (match.Leader.Id == this.mainCoordinator)
+                        match = eventPacket.ChangedObject as MatchPacket;
+                        if (match.Leader.Id === this.mainCoordinator)
                             this.mainMatch = null;
                         this.emit("matchChanged", this.mainMatch);
                         break;
@@ -175,7 +178,7 @@ export class TASocket extends EventEmitter {
                 switch (forwardPacket.Type) {
                     case PacketTypes.Event:
                         let eventPacket = forwardPacket.SpecificPacket as EventPacket;
-                        if (eventPacket.Type == EventType.PlayerUpdated)
+                        if (eventPacket.Type === EventType.PlayerUpdated)
                             this.emit("scoreUpdate", forwardPacket.ForwardTo, eventPacket.ChangedObject as Player);
                         break;
 
@@ -191,7 +194,7 @@ export class TASocket extends EventEmitter {
                 let connectPacket = packet.SpecificPacket as ConnectPacket;
                 switch (connectPacket.ClientType) {
                     case ConnectTypes.Coordinator:
-                        if (connectPacket.Password == this.mainPassword && !this.mainCoordinator) {
+                        if (connectPacket.Password === this.mainPassword && !this.mainCoordinator) {
                             let coordinator = this.getCoordinatorKeyFromName(connectPacket.Name);
                             while (!coordinator) {
                                 coordinator = this.getCoordinatorKeyFromName(connectPacket.Name);
