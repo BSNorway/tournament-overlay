@@ -106,11 +106,18 @@ export interface Beatmap {
     Difficulty: number;
 }
 
+export interface PreviewBeatmapLevel {
+    LevelId: string;
+    Name: string;
+    Characteristics: Characteristic[];
+    Loaded: boolean;
+}
+
 export interface MatchPacket {
     Guid: string;
     Players: Player[];
     Leader: User;
-    SelectedLevel: any;
+    SelectedLevel: PreviewBeatmapLevel;
     SelectedCharacteristic: Characteristic;
     SelectedDifficulty: BeatmapDifficulty;
 }

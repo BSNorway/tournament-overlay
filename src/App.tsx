@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 // import { Toast, ToastBody } from 'reactstrap';
 import './App.scss';
 import Score from './Score';
+import SongDisplay from './SongDisplay';
 import UserView1 from './UserView2';
 import { MatchPacket, PointEvent } from './websocket/packet';
 import { TASocket } from './websocket/socket';
@@ -96,6 +97,7 @@ export default class App extends Component<any, { infoToast: string[], infoToast
           <UserView1 fill={fillWidth > 0 ? Math.min(fillWidth, 100) : 0} percent={team1.accuracy} score={team1.score}>{team1.name}</UserView1>
           <UserView1 right fill={fillWidth < 0 ? Math.min(Math.abs(fillWidth), 100) : 0} percent={team2.accuracy} score={team2.score}>{team2.name}</UserView1>
         </div>
+        <SongDisplay levelId={this.state.match?.SelectedLevel.LevelId}></SongDisplay>
       </div>
     );
   }
